@@ -7,11 +7,11 @@ import subprocess
 
 DEFAULT_SEGMENT_SYMBOLS = ['.', '?', '!']
 DEFAULT_MIN_LENGTH = 0  # set to 0 to disable merging Segments
-DEFAULT_MODEL_NAME = "base"
+DEFAULT_MODEL_SIZE = "base"
 
 print("Loading base whisper model...")
 models = {
-    DEFAULT_MODEL_NAME: whisper.load_model(DEFAULT_MODEL_NAME)
+    DEFAULT_MODEL_SIZE: whisper.load_model(DEFAULT_MODEL_SIZE)
 }
 print("Loading base whisper model done.")
 
@@ -49,19 +49,19 @@ def download_youtube(video_url):
     return audio_name
 
 
-def transcribe_audio(audio_path, min_length=DEFAULT_MIN_LENGTH, segment_symbols=DEFAULT_SEGMENT_SYMBOLS, model_name=DEFAULT_MODEL_NAME):
+def transcribe_audio(audio_path, min_length=DEFAULT_MIN_LENGTH, segment_symbols=DEFAULT_SEGMENT_SYMBOLS, model_size=DEFAULT_MODEL_SIZE):
     if not min_length:
         min_length = DEFAULT_MIN_LENGTH
 
     if not segment_symbols:
         segment_symbols = DEFAULT_SEGMENT_SYMBOLS
 
-    if not model_name:
-        model_name = DEFAULT_MODEL_NAME
+    if not model_size:
+        model_size = DEFAULT_MODEL_SIZE
 
-    if model_name not in models:
-        models[model_name] = whisper.load_model(model_name)
-    model = models[model_name]
+    if model_size not in models:
+        models[model_size] = whisper.load_model(model_size)
+    model = models[model_size]
 
     transcribe = model.transcribe(audio=audio_path)
     segments = transcribe['segments']

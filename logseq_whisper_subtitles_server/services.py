@@ -55,7 +55,7 @@ def transcribe_audio(audio_path, min_length=DEFAULT_MIN_LENGTH, segment_symbols=
         text = segment['text'].strip()
 
         # Check if the previous segment needs to be merged
-        if previous_segment and (previous_segment[-1] not in segment_symbols or len(previous_segment) < min_length):
+        if previous_segment and (previous_segment[-1] not in segment_symbols or len(previous_segment) < int(min_length)):
             previous_segment = f"{previous_segment} {text}"
             end_time_format = str(0) + str(timedelta(seconds=int(segment['end'])))
         else:

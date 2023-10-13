@@ -12,13 +12,19 @@ def transcribe():
     segment_symbols = request.form.get('segment_symbols', '')
     model_name = request.form.get('model_name', '')
 
+    source = "none"
     youtube_pattern = r"https://www\.youtube\.com/watch\?v=[a-zA-Z0-9_-]+"
     youtube_match = re.search(youtube_pattern, text)
     if youtube_match:
         youtube_url = youtube_match.group()
         audio_path = download_youtube(youtube_url)
+        source = "youtube"
 
-    return jsonify(transcribe_audio(audio_path, min_length, segment_symbols, model_name))
+    return jsonify(
+        {
+            "source": source,  # support local etc.
+            "segments": transcribe_audio(audio_path, min_length, segment_symbols, model_name)
+        })
 
 
 if __name__ == '__main__':

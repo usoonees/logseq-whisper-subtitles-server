@@ -4,28 +4,44 @@ import whisper
 import uuid
 import os
 
-SEGMENT_SYMBOLS = ['.', '?', '!']
-MIN_LENGTH = 0  # set to 0 to disable merging Segments
-MODEL_NAME = "base"
-print("Loading whisper model...")
-model = whisper.load_model(MODEL_NAME)
-print("Loading whisper model done.")
+DEFAULT_SEGMENT_SYMBOLS = ['.', '?', '!']
+DEFAULT_MIN_LENGTH = 0  # set to 0 to disable merging Segments
+DEFAULT_MODEL_NAME = "base"
+
+print("Loading base whisper model...")
+models = {
+    DEFAULT_MODEL_NAME: whisper.load_model(DEFAULT_MODEL_NAME)
+}
+print("Loading base whisper model done.")
 
 
 def download_youtube(video_url):
-    print(f"Downloading the video: {video_url}...")
+    print(f"Downloading the video: {video_url} into audio ...")
     yt = YouTube(video_url)
     audio_stream = yt.streams.filter(only_audio=True).first()
     vid = uuid.uuid4().hex
     audio_name = f'output_audio_{vid}.mp3'
 
     audio_stream.download(filename=audio_name, output_path='.')
-    print(f"Downloading the video: {video_url} done.")
+    print(f"Downloading the video: {video_url} into audio done.")
     return audio_name
 
 
-def transcribe_audio(path):
-    transcribe = model.transcribe(audio=path)
+def transcribe_audio(audio_path, min_length=DEFAULT_MIN_LENGTH, segment_symbols=DEFAULT_SEGMENT_SYMBOLS, model_name=DEFAULT_MODEL_NAME):
+    if not min_length:
+        min_length = DEFAULT_MIN_LENGTH
+
+    if not segment_symbols:
+        segment_symbols = DEFAULT_SEGMENT_SYMBOLS
+
+    if not model_name:
+        model_name = DEFAULT_MODEL_NAME
+
+    if model_name not in models:
+        models[model_name] = whisper.load_model(model_name)
+    model = models[model_name]
+
+    transcribe = model.transcribe(audio=audio_path)
     segments = transcribe['segments']
 
     previous_segment = None
@@ -39,7 +55,7 @@ def transcribe_audio(path):
         text = segment['text'].strip()
 
         # Check if the previous segment needs to be merged
-        if previous_segment and (previous_segment[-1] not in SEGMENT_SYMBOLS or len(previous_segment) < MIN_LENGTH):
+        if previous_segment and (previous_segment[-1] not in segment_symbols or len(previous_segment) < min_length):
             previous_segment = f"{previous_segment} {text}"
             end_time_format = str(0) + str(timedelta(seconds=int(segment['end'])))
         else:
@@ -65,7 +81,7 @@ def transcribe_audio(path):
             "segment": previous_segment
         })
 
-    os.remove(path)
+    os.remove(audio_path)
 
     return res
 

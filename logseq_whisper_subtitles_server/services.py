@@ -3,6 +3,7 @@ from datetime import timedelta
 import whisper
 import uuid
 import os
+import subprocess
 
 DEFAULT_SEGMENT_SYMBOLS = ['.', '?', '!']
 DEFAULT_MIN_LENGTH = 0  # set to 0 to disable merging Segments
@@ -15,12 +16,33 @@ models = {
 print("Loading base whisper model done.")
 
 
+def extract_audio_from_local_video(video_path):
+    audio_output_path = f'local_audio_{uuid.uuid4().hex}.mp3'
+    command = [
+        'ffmpeg',
+        '-i', video_path,  # Input video file path
+        '-q:a', '0',       # Quality of audio (0 means best)
+        '-map', 'a',       # Extract audio stream
+        '-vn',             # No video output
+        audio_output_path  # Output audio file path
+    ]
+    try:
+        print("Converting local video to audio ...")
+        subprocess.run(command)
+        print("Converting local video to audio done.")
+    except subprocess.CalledProcessError as e:
+        print("Converting local video to audio failed.")
+        raise RuntimeError(f"Failed to convert local video to audio: {e.stderr.decode()}") from e
+
+    return audio_output_path
+
+
 def download_youtube(video_url):
     print(f"Downloading the video: {video_url} into audio ...")
     yt = YouTube(video_url)
     audio_stream = yt.streams.filter(only_audio=True).first()
     vid = uuid.uuid4().hex
-    audio_name = f'output_audio_{vid}.mp3'
+    audio_name = f'youtube_audio_{vid}.mp3'
 
     audio_stream.download(filename=audio_name, output_path='.')
     print(f"Downloading the video: {video_url} into audio done.")

@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
-from services import download_youtube, transcribe_audio
+from services import download_youtube, transcribe_audio, extract_audio_from_local_video
 import re
+import os
 
 app = Flask(__name__)
 
@@ -11,14 +12,33 @@ def transcribe():
     min_length = request.form.get('min_length', '')
     segment_symbols = request.form.get('segment_symbols', '')
     model_name = request.form.get('model_name', '')
+    graph_path = request.form.get('graph_path', '')
 
-    source = "none"
+    source = None
+    audio_path = None
     youtube_pattern = r"https://www\.youtube\.com/watch\?v=[a-zA-Z0-9_-]+"
     youtube_match = re.search(youtube_pattern, text)
     if youtube_match:
         youtube_url = youtube_match.group()
         audio_path = download_youtube(youtube_url)
         source = "youtube"
+
+    local_video_pattern = r'!\[.*?\]\((.*?)\)'
+    local_video_match = re.search(local_video_pattern, text)
+    if local_video_match:
+        source = "local"
+        video_path = local_video_match.group(1)
+        if video_path.startswith("../"):
+            video_path = os.path.join(graph_path, video_path[3:])
+
+        audio_path = extract_audio_from_local_video(video_path)
+        print(f"Extracted file path: {video_path}")
+
+    if source is None:
+        return jsonify({
+            "source": "not supported yet",
+            "segments": []
+        })
 
     return jsonify(
         {

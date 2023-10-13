@@ -1,3 +1,3 @@
-flask
-whisper
+Flask
+openai-whisper
 pytube

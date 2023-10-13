@@ -2,6 +2,7 @@ from pytube import YouTube
 from datetime import timedelta
 import whisper
 import uuid
+import os
 
 SEGMENT_SYMBOLS = ['.', '?', '!']
 MIN_LENGTH = 0  # set to 0 to disable merging Segments
@@ -12,13 +13,14 @@ print("Loading whisper model done.")
 
 
 def download_youtube(video_url):
-    video_url = 'https://www.youtube.com/watch?v=example'
+    print(f"Downloading the video: {video_url}...")
     yt = YouTube(video_url)
     audio_stream = yt.streams.filter(only_audio=True).first()
-    vid = uuid.uuid4.hex
+    vid = uuid.uuid4().hex
     audio_name = f'output_audio_{vid}.mp3'
 
     audio_stream.download(filename=audio_name, output_path='.')
+    print(f"Downloading the video: {video_url} done.")
     return audio_name
 
 
@@ -55,8 +57,6 @@ def transcribe_audio(path):
             previous_start_time_format = start_time_format
             previous_start_time = start_time
 
-
-    # Don't forget the last segment
     if previous_segment:
         last_segment = f"{previous_start_time_format} --> {end_time_format}\n{previous_segment}\n\n"
         print(last_segment)
@@ -64,6 +64,8 @@ def transcribe_audio(path):
             "startTime": previous_start_time,
             "segment": previous_segment
         })
+
+    os.remove(path)
 
     return res
 

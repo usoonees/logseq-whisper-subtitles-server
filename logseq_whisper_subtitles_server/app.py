@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from services import download_youtube, transcribe_audio, extract_audio_from_local_video
+from services import download_youtube, transcribe_audio, extract_audio_from_local_video, is_audio_file
 import re
 import os
 import traceback
@@ -25,16 +25,17 @@ def transcribe():
             audio_path = download_youtube(youtube_url)
             source = "youtube"
 
-        local_video_pattern = r'!\[.*?\]\((.*?)\)'
-        local_video_match = re.search(local_video_pattern, text)
-        if local_video_match:
+        local_file_pattern = r'!\[.*?\]\((.*?)\)'
+        local_file_match = re.search(local_file_pattern, text)
+        if local_file_match:
             source = "local"
-            video_path = local_video_match.group(1)
-            if video_path.startswith("../"):
-                video_path = os.path.join(graph_path, video_path[3:])
-
-            audio_path = extract_audio_from_local_video(video_path)
-            print(f"Extracted file path: {video_path}")
+            local_file_path = local_file_match.group(1)
+            if local_file_path.startswith("../"):
+                local_file_path = os.path.join(graph_path, local_file_path[3:])
+            audio_path = local_file_path
+            if not is_audio_file(local_file_path):
+                audio_path = extract_audio_from_local_video(local_file_path)
+            print(f"Extracted file path: {local_file_path}")
 
         if source is None:
             return jsonify({

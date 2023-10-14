@@ -16,6 +16,12 @@ models = {
 print("Loading base whisper model done.")
 
 
+def is_audio_file(filename):
+    audio_extensions = ['.mp3', '.wav', '.aac', '.ogg', '.flac', '.m4a', '.wma']
+    _, file_extension = os.path.splitext(filename)
+    return file_extension.lower() in audio_extensions
+
+
 def extract_audio_from_local_video(video_path):
     audio_output_path = f'local_audio_{uuid.uuid4().hex}.mp3'
     command = [

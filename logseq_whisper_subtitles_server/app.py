@@ -20,24 +20,36 @@ def transcribe():
         audio_path = None
         youtube_pattern = r"https://www\.youtube\.com/watch\?v=[a-zA-Z0-9_-]+"
         youtube_match = re.search(youtube_pattern, text)
+
+        local_file_pattern = r'!\[.*?\]\((.*?)\)'
+        local_file_match = re.search(local_file_pattern, text)
+
         if youtube_match:
             youtube_url = youtube_match.group()
             audio_path = download_youtube(youtube_url)
             source = "youtube"
 
-        local_file_pattern = r'!\[.*?\]\((.*?)\)'
-        local_file_match = re.search(local_file_pattern, text)
-        if local_file_match:
-            source = "local"
+        elif local_file_match:
             local_file_path = local_file_match.group(1)
+
+            if local_file_path.startswith("http") or local_file_path.startswith("https"):
+                print("This is a URL, not a local file")
+                return jsonify({
+                    "source": "",
+                    "segments": [],
+                    "error": "This is a URL, not a local file"
+                })
+
+            source = "local"
             if local_file_path.startswith("../"):
                 local_file_path = os.path.join(graph_path, local_file_path[3:])
+
             audio_path = local_file_path
             if not is_audio_file(local_file_path):
                 audio_path = extract_audio_from_local_video(local_file_path)
             print(f"Extracted file path: {local_file_path}")
 
-        if source is None:
+        else:
             return jsonify({
                 "source": "",
                 "segments": [],

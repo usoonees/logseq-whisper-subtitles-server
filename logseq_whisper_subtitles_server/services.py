@@ -5,9 +5,19 @@ import uuid
 import os
 import subprocess
 
-DEFAULT_SEGMENT_SYMBOLS = ['.', '?', '!']
+EN_SEGMENT_SYMBOLS = ['.', '?', '!']
 DEFAULT_MIN_LENGTH = 0  # set to 0 to disable merging Segments
 DEFAULT_MODEL_SIZE = "base"
+
+connect_punctuation = {
+    "zh": "，",
+    # TODO: other languages
+}
+
+end_punctuation = {
+    "zh": "。",
+    # TODO: other languages
+}
 
 print("Loading base whisper model...")
 models = {
@@ -55,12 +65,9 @@ def download_youtube(video_url):
     return audio_name
 
 
-def transcribe_audio(audio_path, min_length=DEFAULT_MIN_LENGTH, segment_symbols=DEFAULT_SEGMENT_SYMBOLS, model_size=DEFAULT_MODEL_SIZE):
+def transcribe_audio(audio_path, min_length=DEFAULT_MIN_LENGTH, model_size=DEFAULT_MODEL_SIZE, zh_type='zh-cn'):
     if not min_length:
         min_length = DEFAULT_MIN_LENGTH
-
-    if not segment_symbols:
-        segment_symbols = DEFAULT_SEGMENT_SYMBOLS
 
     if not model_size:
         model_size = DEFAULT_MODEL_SIZE
@@ -69,8 +76,14 @@ def transcribe_audio(audio_path, min_length=DEFAULT_MIN_LENGTH, segment_symbols=
         models[model_size] = whisper.load_model(model_size)
     model = models[model_size]
 
-    transcribe = model.transcribe(audio=audio_path)
+    if zh_type.strip() == 'zh-cn':
+        transcribe = model.transcribe(audio=audio_path, initial_prompt="以下是普通话句子，以中文简体输出")  # 避免繁体输入
+    else:
+        transcribe = model.transcribe(audio=audio_path)
+
     segments = transcribe['segments']
+    detect_language = transcribe.get('language', '')
+    print("detected language: ", detect_language)
 
     previous_segment = None
     previous_start_time = None
@@ -83,8 +96,14 @@ def transcribe_audio(audio_path, min_length=DEFAULT_MIN_LENGTH, segment_symbols=
         text = segment['text'].strip()
 
         # Check if the previous segment needs to be merged
-        if previous_segment and (previous_segment[-1] not in segment_symbols or len(previous_segment) < int(min_length)):
-            previous_segment = f"{previous_segment} {text}"
+        is_segment_symbol = text[-1] in EN_SEGMENT_SYMBOLS
+
+        if detect_language != 'en':
+            is_segment_symbol = True
+        if previous_segment and (not is_segment_symbol or len(previous_segment) < int(min_length)):
+            conn_punc = connect_punctuation.get(detect_language, " ")
+            previous_segment = "".join([previous_segment, conn_punc, text])
+            # previous_segment = f"{previous_segment}{}{text}"
             end_time_format = str(0) + str(timedelta(seconds=int(segment['end'])))
         else:
             # If this is not the first iteration, print the previous segment
@@ -93,7 +112,7 @@ def transcribe_audio(audio_path, min_length=DEFAULT_MIN_LENGTH, segment_symbols=
                 print(merged_segment)
                 res.append({
                     "startTime": previous_start_time,
-                    "segment": previous_segment
+                    "segment": previous_segment + end_punctuation.get(detect_language, "")
                 })
 
             # Set the new previous segment

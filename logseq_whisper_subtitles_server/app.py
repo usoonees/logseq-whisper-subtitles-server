@@ -12,9 +12,9 @@ def transcribe():
     try:
         text = request.form['text'].strip()
         min_length = request.form.get('min_length', '')
-        segment_symbols = request.form.get('segment_symbols', '')
         model_size = request.form.get('model_size', '')
         graph_path = request.form.get('graph_path', '')
+        zh_type = request.form.get('zh_type', 'zh-cn')
 
         source = None
         audio_path = None
@@ -60,7 +60,7 @@ def transcribe():
             {
                 "error": "",
                 "source": source,  # support local etc.
-                "segments": transcribe_audio(audio_path, min_length, segment_symbols, model_size)
+                "segments": transcribe_audio(audio_path, min_length, model_size, zh_type)
             })
     except Exception as e:
         traceback.print_exc()

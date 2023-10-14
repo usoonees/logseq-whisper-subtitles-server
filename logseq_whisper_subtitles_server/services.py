@@ -23,7 +23,7 @@ def is_audio_file(filename):
 
 
 def extract_audio_from_local_video(video_path):
-    audio_output_path = f'local_audio_{uuid.uuid4().hex}.mp3'
+    audio_output_path = f'local/local_audio_{uuid.uuid4().hex}.mp3'
     command = [
         'ffmpeg',
         '-i', video_path,  # Input video file path
@@ -48,7 +48,7 @@ def download_youtube(video_url):
     yt = YouTube(video_url)
     audio_stream = yt.streams.filter(only_audio=True).first()
     vid = uuid.uuid4().hex
-    audio_name = f'youtube_audio_{vid}.mp3'
+    audio_name = f'youtube/youtube_audio_{vid}.mp3'
 
     audio_stream.download(filename=audio_name, output_path='.')
     print(f"Downloading the video: {video_url} into audio done.")
@@ -109,7 +109,7 @@ def transcribe_audio(audio_path, min_length=DEFAULT_MIN_LENGTH, segment_symbols=
             "segment": previous_segment
         })
 
-    os.remove(audio_path)
+    # os.remove(audio_path)
 
     return res
 

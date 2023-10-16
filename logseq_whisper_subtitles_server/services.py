@@ -4,7 +4,7 @@ import whisper
 import uuid
 import os
 import subprocess
-import re
+# import re
 
 EN_SEGMENT_SYMBOLS = ['.', '?', '!']
 DEFAULT_MIN_LENGTH = 100  # set to 0 to disable merging Segments
@@ -25,6 +25,8 @@ def is_audio_file(filename):
 
 def extract_audio_from_local_video(video_path):
     audio_output_path = os.path.join('local', f'local_audio_{uuid.uuid4().hex}.mp3')
+    if not os.path.exists('local'):
+        os.makedirs('youtube')
     command = [
         'ffmpeg',
         '-i', video_path,  # Input video file path
@@ -49,15 +51,19 @@ def download_youtube(video_url):
     yt = YouTube(video_url)
     audio_stream = yt.streams.filter(only_audio=True).first()
     vid = uuid.uuid4().hex
+    if not os.path.exists('youtube'):
+        os.makedirs('youtube')
     audio_name = os.path.join('youtube' f'youtube_audio_{vid}.mp3')
 
     audio_stream.download(filename=audio_name, output_path='.')
     print(f"Downloading the video: {video_url} into audio done.")
     return audio_name
 
+
 def replace_punctuation(text):
     text = text.replace(",", "，").replace(".", "。").replace("?", "？").replace("!", "！")
     return text
+
 
 def transcribe_audio(audio_path, min_length=DEFAULT_MIN_LENGTH, model_size=DEFAULT_MODEL_SIZE, zh_type='zh-cn'):
     if not min_length:

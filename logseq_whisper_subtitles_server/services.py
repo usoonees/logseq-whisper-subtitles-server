@@ -78,9 +78,9 @@ def transcribe_audio(audio_path, min_length=DEFAULT_MIN_LENGTH, model_size=DEFAU
 
     if zh_type.strip() == 'zh-cn':
         print("Transcribing Chinese simplified audio ...")
-        transcribe = model.transcribe(audio=audio_path, initial_prompt="对于普通话句子，以中文简体输出")  # 避免繁体输出
+        transcribe = model.transcribe(audio=audio_path, verbose=True, initial_prompt="对于普通话句子，以中文简体输出")  # 避免繁体输出
     else:
-        transcribe = model.transcribe(audio=audio_path)
+        transcribe = model.transcribe(audio=audio_path, verbose=True)
 
     segments = transcribe['segments']
     detect_language = transcribe.get('language', '')

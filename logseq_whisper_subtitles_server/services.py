@@ -26,7 +26,7 @@ def is_audio_file(filename):
 def extract_audio_from_local_video(video_path):
     audio_output_path = os.path.join('local', f'local_audio_{uuid.uuid4().hex}.mp3')
     if not os.path.exists('local'):
-        os.makedirs('youtube')
+        os.makedirs('local')
     command = [
         'ffmpeg',
         '-i', video_path,  # Input video file path
@@ -53,7 +53,7 @@ def download_youtube(video_url):
     vid = uuid.uuid4().hex
     if not os.path.exists('youtube'):
         os.makedirs('youtube')
-    audio_name = os.path.join('youtube' f'youtube_audio_{vid}.mp3')
+    audio_name = os.path.join('youtube', f'youtube_audio_{vid}.mp3')
 
     audio_stream.download(filename=audio_name, output_path='.')
     print(f"Downloading the video: {video_url} into audio done.")

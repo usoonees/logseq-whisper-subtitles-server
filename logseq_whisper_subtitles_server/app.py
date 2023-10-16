@@ -18,7 +18,7 @@ def transcribe():
 
         source = None
         audio_path = None
-        youtube_pattern = r"https://www\.youtube\.com/watch\?v=[a-zA-Z0-9_-]+"
+        youtube_pattern = r"https://www\.youtube\.com/watch\?v=[a-zA-Z0-9_-]+|https://youtu\.be/[a-zA-Z0-9_-]+"
         youtube_match = re.search(youtube_pattern, text)
 
         local_file_pattern = r'!\[.*?\]\((.*?)\)'

@@ -94,7 +94,7 @@ To start the dedicated server, 2 options:
 
 Make sure that the server is running if intend to use the dedicated plugin (**logseq-plugin-whisper-subtitles**) in Logseq.
 
-### Related Repositories
+### Related Repository
 
 - [logseq-plugin-whisper-subtitles](https://github.com/usoonees/logseq-plugin-whisper-subtitles) - The Logseq plugin that interfaces with this server to extract subtitles and timestamp from videos.
 - [whisper](https://github.com/openai/whisper) - The AI model used to extract voice from audio.

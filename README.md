@@ -20,8 +20,7 @@ cd logseq-whisper-subtitles-server
 
 2. **Install the required Python packages**:
 ```bash
-pip install git+https://github.com/openai/whisper.git 
-pip3 install flask pytube
+pip3 install flask pytube openai-whisper
 ```
 
 ### Usage

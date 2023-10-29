@@ -77,6 +77,8 @@ def transcribe_audio(audio_path, min_length=DEFAULT_MIN_LENGTH, model_size=DEFAU
         models[model_size] = whisper.load_model(model_size)
     model = models[model_size]
 
+    print("Using model: ", model_size)
+
     if zh_type.strip() == 'zh-cn':
         print("Transcribing Chinese simplified audio ...")
         transcribe = model.transcribe(audio=audio_path, verbose=True, initial_prompt="对于普通话句子，以中文简体输出")  # 避免繁体输出
@@ -90,19 +92,20 @@ def transcribe_audio(audio_path, min_length=DEFAULT_MIN_LENGTH, model_size=DEFAU
     previous_segment = None
     previous_start_time = None
     previous_start_time_format = None
+    previous_connect_space = " "
     res = []
     for segment in segments:
         start_time = int(segment['start'])
         start_time_format = str(0) + str(timedelta(seconds=int(segment['start'])))
         end_time_format = str(0) + str(timedelta(seconds=int(segment['end'])))
         text = segment['text'].strip()
-        connect_space = " "
+        cur_connect_space = previous_connect_space
         if detect_language in ['zh', 'ja']:
             text = replace_punctuation(text)
             if text[-1] in PUNCTUATION:
-                connect_space = ""
+                previous_connect_space = ""
             else:
-                connect_space = "，"
+                previous_connect_space = "，"
 
         # Check if the previous segment needs to be merged
         is_segment_symbol = text[-1] in EN_SEGMENT_SYMBOLS
@@ -111,7 +114,7 @@ def transcribe_audio(audio_path, min_length=DEFAULT_MIN_LENGTH, model_size=DEFAU
             is_segment_symbol = True
 
         if previous_segment and (not is_segment_symbol or len(previous_segment) < int(min_length)):
-            previous_segment = f"{previous_segment}{connect_space}{text}"
+            previous_segment = f"{previous_segment}{cur_connect_space}{text}"
             end_time_format = str(0) + str(timedelta(seconds=int(segment['end'])))
         else:
             # If this is not the first iteration, print the previous segment

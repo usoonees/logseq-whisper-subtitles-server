@@ -7,6 +7,7 @@ import subprocess
 # import re
 
 EN_SEGMENT_SYMBOLS = ['.', '?', '!']
+PUNCTUATION = ['，', '。', '？', '！']
 DEFAULT_MIN_LENGTH = 100  # set to 0 to disable merging Segments
 DEFAULT_MODEL_SIZE = "base"
 
@@ -98,7 +99,10 @@ def transcribe_audio(audio_path, min_length=DEFAULT_MIN_LENGTH, model_size=DEFAU
         connect_space = " "
         if detect_language in ['zh', 'ja']:
             text = replace_punctuation(text)
-            connect_space = ""
+            if text[-1] in PUNCTUATION:
+                connect_space = ""
+            else:
+                connect_space = "，"
 
         # Check if the previous segment needs to be merged
         is_segment_symbol = text[-1] in EN_SEGMENT_SYMBOLS

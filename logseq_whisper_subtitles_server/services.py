@@ -74,7 +74,9 @@ def transcribe_audio(audio_path, min_length=DEFAULT_MIN_LENGTH, model_size=DEFAU
         model_size = DEFAULT_MODEL_SIZE
 
     if model_size not in models:
+        print(f"Loading {model_size} whisper model...")
         models[model_size] = whisper.load_model(model_size)
+
     model = models[model_size]
 
     print("Using model: ", model_size)

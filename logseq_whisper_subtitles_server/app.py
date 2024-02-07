@@ -21,7 +21,7 @@ def transcribe():
         youtube_pattern = r"https://www\.youtube\.com/watch\?v=[a-zA-Z0-9_-]+|https://youtu\.be/[a-zA-Z0-9_-]+"
         youtube_match = re.search(youtube_pattern, text)
 
-        local_file_pattern = r'(!\[.*?\]\((.*?)\))|(\{\{renderer :[a-zA-Z]+, (.*?)\}\})'
+        local_file_pattern = r'(!\[.*?\]\((.*?)\))|(\{\{renderer :[a-zA-Z]+, (.*?)\}\})|\[\[(.*?)\]\[.*?\]\]'
         local_file_match = re.search(local_file_pattern, text)
 
         if youtube_match:
@@ -34,6 +34,14 @@ def transcribe():
                 local_file_path = local_file_match.group(2)
             elif local_file_match.group(4) is not None:
                 local_file_path = local_file_match.group(4)
+            elif local_file_match.group(5) is not None:
+                local_file_path = local_file_match.group(5)
+            else:
+                return jsonify({
+                    "source": "",
+                    "segments": [],
+                    "error": "No local file path found"
+                })
 
             if local_file_path.startswith("http") or local_file_path.startswith("https"):
                 print("This is a URL, not a local file")

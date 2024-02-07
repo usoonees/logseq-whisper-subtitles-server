@@ -2,3 +2,4 @@
 .vscode
 local/*.mp3
 youtube/*.mp3
+.DS_Store

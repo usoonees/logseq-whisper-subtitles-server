@@ -1,4 +1,4 @@
-from pytube import YouTube
+from pytubefix import YouTube
 from datetime import timedelta
 import whisper
 import uuid

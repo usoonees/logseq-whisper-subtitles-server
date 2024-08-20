@@ -1,4 +1,4 @@
-from pytube import YouTube
+import yt_dlp
 from datetime import timedelta
 import whisper
 import uuid
@@ -49,16 +49,42 @@ def extract_audio_from_local_video(video_path):
 
 def download_youtube(video_url):
     print(f"Downloading the video: {video_url} into audio ...")
-    yt = YouTube(video_url)
-    audio_stream = yt.streams.filter(only_audio=True).first()
     vid = uuid.uuid4().hex
     if not os.path.exists('youtube'):
         os.makedirs('youtube')
     audio_name = os.path.join('youtube', f'youtube_audio_{vid}.mp3')
 
-    audio_stream.download(filename=audio_name, output_path='.')
-    print(f"Downloading the video: {video_url} into audio done.")
-    return audio_name
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }],
+        'outtmpl': audio_name,
+        'keepvideo': True,  # 保留原始下载的文件
+        'postprocessor_args': [
+            '-ar', '16000'  # 设置音频采样率为16kHz，与原始代码保持一致
+        ],
+    }
+
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([video_url])
+        print(f"Downloading the video: {video_url} into audio done.")
+        
+        # 检查文件是否存在，如果不存在，尝试其他可能的文件名
+        if not os.path.exists(audio_name):
+            possible_name = audio_name + '.mp3'
+            if os.path.exists(possible_name):
+                os.rename(possible_name, audio_name)
+            else:
+                raise FileNotFoundError(f"Could not find the downloaded audio file: {audio_name}")
+        
+        return audio_name
+    except Exception as e:
+        print(f"Error downloading video: {str(e)}")
+        raise
 
 
 def replace_punctuation(text):

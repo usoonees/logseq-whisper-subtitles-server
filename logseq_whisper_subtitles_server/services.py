@@ -4,25 +4,35 @@ import whisper
 import uuid
 import os
 import subprocess
-# import re
+import torch
 
 EN_SEGMENT_SYMBOLS = ['.', '?', '!']
 PUNCTUATION = ['，', '。', '？', '！']
 DEFAULT_MIN_LENGTH = 100  # set to 0 to disable merging Segments
 DEFAULT_MODEL_SIZE = "base"
 
+# Add diagnostic information
+print(f"PyTorch version: {torch.__version__}")
+print(f"CUDA available: {torch.cuda.is_available()}")
+if torch.cuda.is_available():
+    print(f"CUDA version: {torch.version.cuda}")
+    print(f"CUDA device: {torch.cuda.get_device_name(0)}")
+
+# Check if CUDA is available and force its use if it is
+device = "cuda" if torch.cuda.is_available() else "cpu"
+print(f"Using device: {device}")
+
 print("Loading base whisper model...")
 models = {
-    DEFAULT_MODEL_SIZE: whisper.load_model(DEFAULT_MODEL_SIZE)
+    DEFAULT_MODEL_SIZE: whisper.load_model(DEFAULT_MODEL_SIZE).to(device)
 }
 print("Loading base whisper model done.")
-
+print(f"Model device: {next(models[DEFAULT_MODEL_SIZE].parameters()).device}")
 
 def is_audio_file(filename):
     audio_extensions = ['.mp3', '.wav', '.aac', '.ogg', '.flac', '.m4a', '.wma']
     _, file_extension = os.path.splitext(filename)
     return file_extension.lower() in audio_extensions
-
 
 def extract_audio_from_local_video(video_path):
     audio_output_path = os.path.join('local', f'local_audio_{uuid.uuid4().hex}.mp3')
@@ -45,7 +55,6 @@ def extract_audio_from_local_video(video_path):
         raise RuntimeError(f"Failed to convert local video to audio: {e.stderr.decode()}") from e
 
     return audio_output_path
-
 
 def download_youtube(video_url):
     print(f"Downloading the video: {video_url} into audio ...")
@@ -86,11 +95,9 @@ def download_youtube(video_url):
         print(f"Error downloading video: {str(e)}")
         raise
 
-
 def replace_punctuation(text):
     text = text.replace(",", "，").replace(".", "。").replace("?", "？").replace("!", "！")
     return text
-
 
 def transcribe_audio(audio_path, min_length=DEFAULT_MIN_LENGTH, model_size=DEFAULT_MODEL_SIZE, zh_type='zh-cn'):
     if not min_length:
@@ -101,20 +108,21 @@ def transcribe_audio(audio_path, min_length=DEFAULT_MIN_LENGTH, model_size=DEFAU
 
     if model_size not in models:
         print(f"Loading {model_size} whisper model...")
-        models[model_size] = whisper.load_model(model_size)
+        models[model_size] = whisper.load_model(model_size).to(device)
 
     model = models[model_size]
 
     print("Using model: ", model_size)
+    print(f"Model device: {next(model.parameters()).device}")
 
     if zh_type.strip() == 'zh-cn':
         print("Transcribing Chinese simplified audio ...")
-        transcribe = model.transcribe(audio=audio_path, verbose=True, initial_prompt="对于普通话句子，以中文简体输出")  # 避免繁体输出
+        transcribe = model.transcribe(audio=audio_path, verbose=True, initial_prompt="对于普通话句子，以中文简体输出", fp16=(device=="cuda"))
     else:
-        transcribe = model.transcribe(audio=audio_path, verbose=True)
+        transcribe = model.transcribe(audio=audio_path, verbose=True, fp16=(device=="cuda"))
 
     segments = transcribe['segments']
-    detect_language = transcribe.get('language', '')
+    detect_language = transcribe.get('language', '')型号 = {
     print("detected language: ", detect_language)
 
     previous_segment = None
@@ -168,7 +176,6 @@ def transcribe_audio(audio_path, min_length=DEFAULT_MIN_LENGTH, model_size=DEFAU
         })
 
     return res
-
 
 if __name__ == "__main__":
     print("=== English audio test")
